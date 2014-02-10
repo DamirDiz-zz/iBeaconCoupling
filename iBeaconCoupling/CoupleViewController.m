@@ -16,6 +16,7 @@
 
 @property (weak, nonatomic) IBOutlet UILabel *coupleStatusLabel;
 @property (weak, nonatomic) IBOutlet UIButton *decoupleButton;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicator;
 
 @end
 
@@ -36,6 +37,8 @@
     [[BeaconTracker sharedBeaconTracker] addDelegate:self];
     
     [self.decoupleButton setHidden:YES];
+    [self.activityIndicator startAnimating];
+
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -73,7 +76,9 @@
             self.coupleLogic.coupled = YES;
             self.coupleLogic.beacon = beacon;
             
-            self.coupleStatusLabel.text = @"COUPLED";
+            
+            self.coupleStatusLabel.text = [NSString stringWithFormat:@"Coupled with Beacon! \n Major: %@ Minor: %@", beacon.major, beacon.minor];
+            [self.activityIndicator stopAnimating];
             [self.decoupleButton setHidden:NO];
         }
     }
@@ -85,11 +90,12 @@
         self.coupleLogic.coupled = NO;
         self.coupleLogic.beacon = NULL;
         self.coupleStatusLabel.text = @"Looking for Beacons";
+        [self.activityIndicator startAnimating];
+
         
         [sender setHidden:YES];
     }
 }
-
 
 - (BOOL)couplePhoneAndServerWithBeacon:(CLBeacon *)beacon
 {
