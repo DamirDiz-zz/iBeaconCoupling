@@ -8,10 +8,12 @@
 
 #import "CoupleViewController.h"
 #import "CoupleLogic.h"
+#import "BeaconDefaults.h"
 
 @interface CoupleViewController ()
 
 @property (strong, nonatomic) CoupleLogic *coupleLogic;
+
 @property (weak, nonatomic) IBOutlet UILabel *coupleStatusLabel;
 @property (weak, nonatomic) IBOutlet UIButton *decoupleButton;
 
@@ -47,13 +49,22 @@
 
 - (void)beaconTrackerUpdated
 {
-    CLBeacon *closestBeacon = [[BeaconTracker sharedBeaconTracker] getClosestBeacon];
+    CLBeacon *purpleBeacon = [[BeaconTracker sharedBeaconTracker] getBeaconWhereUUID:[[BeaconDefaults sharedDefaults] defaultProximityUUID] major:[NSNumber numberWithInt:BEACON_PURPLE_MAJOR] minor:[NSNumber numberWithInt:BEACON_PURPLE_MINOR]];
+//    CLBeacon *closestBeacon = [[BeaconTracker sharedBeaconTracker] getClosestBeacon];
     
-    if(closestBeacon.proximity == CLProximityImmediate) {
-        [self couplingRecognizedWithBeacon:closestBeacon];
+    NSLog(@"%f", purpleBeacon.accuracy);
+    if(purpleBeacon.proximity == CLProximityImmediate) {
+        [self couplingRecognizedWithBeacon:purpleBeacon];
     }
 }
 
+- (void)beaconTrackerUpdatedWithBeacons:(NSDictionary *)beacons
+{
+    
+}
+
+
+#pragma mark COUPLING
 - (void)couplingRecognizedWithBeacon:(CLBeacon *)beacon
 {
     if(self.coupleLogic.isCoupled == NO) {
@@ -73,6 +84,8 @@
     if([self decouplePhoneAndServer]) {
         self.coupleLogic.coupled = NO;
         self.coupleLogic.beacon = NULL;
+        self.coupleStatusLabel.text = @"Looking for Beacons";
+        
         [sender setHidden:YES];
     }
 }
@@ -113,27 +126,34 @@
 }
 
 
+//- (id)makeRequestWithURL:(NSURL *)url
+//{
+//    NSURLRequest *request = [[NSURLRequest alloc] initWithURL:url
+//                                                  cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:10];
+//    
+//    // Fetch the JSON response
+//    NSData *responseData;
+//    NSURLResponse *response;
+//    NSError *error;
+//    
+//    // Make synchronous request
+//    responseData = [NSURLConnection sendSynchronousRequest:request
+//                                         returningResponse:&response
+//                                                     error:&error];
+//    
+//    NSError *jsonParsingError = nil;
+//    id responseJSON = [NSJSONSerialization JSONObjectWithData:responseData
+//                                                                 options:0 error:&jsonParsingError];
+//    
+//    
+//    return responseJSON;
+//}
+
 - (id)makeRequestWithURL:(NSURL *)url
 {
-    NSURLRequest *request = [[NSURLRequest alloc] initWithURL:url
-                                                  cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:10];
-    
-    // Fetch the JSON response
-    NSData *responseData;
-    NSURLResponse *response;
-    NSError *error;
-    
-    // Make synchronous request
-    responseData = [NSURLConnection sendSynchronousRequest:request
-                                         returningResponse:&response
-                                                     error:&error];
-    
-    NSError *jsonParsingError = nil;
-    id responseJSON = [NSJSONSerialization JSONObjectWithData:responseData
-                                                                 options:0 error:&jsonParsingError];
-    
-    return responseJSON;
+    return  @{ @"status" : @"success" };
 }
+
 
 - (CoupleLogic *)coupleLogic
 {
