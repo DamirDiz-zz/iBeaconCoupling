@@ -16,6 +16,7 @@
     
     if(self) {
         self.coupled = NO;
+        self.couplePossible = YES;
         self.beacon = NULL;
     }
     

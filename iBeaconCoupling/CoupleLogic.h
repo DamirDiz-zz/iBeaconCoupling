@@ -11,6 +11,7 @@
 
 @interface CoupleLogic : NSObject
 
+@property (nonatomic, getter = isCouplePossible) BOOL couplePossible;
 @property (nonatomic, getter = isCoupled) BOOL coupled;
 @property (nonatomic, strong) CLBeacon *beacon;
 

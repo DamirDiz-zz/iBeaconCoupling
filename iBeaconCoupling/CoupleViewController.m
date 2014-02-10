@@ -14,6 +14,7 @@
 
 @property (strong, nonatomic) CoupleLogic *coupleLogic;
 
+@property (weak, nonatomic) IBOutlet UIImageView *statusImageView;
 @property (weak, nonatomic) IBOutlet UILabel *coupleStatusLabel;
 @property (weak, nonatomic) IBOutlet UIButton *decoupleButton;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicator;
@@ -55,6 +56,7 @@
     CLBeacon *purpleBeacon = [[BeaconTracker sharedBeaconTracker] getBeaconWhereUUID:[[BeaconDefaults sharedDefaults] defaultProximityUUID] major:[NSNumber numberWithInt:BEACON_PURPLE_MAJOR] minor:[NSNumber numberWithInt:BEACON_PURPLE_MINOR]];
 //    CLBeacon *closestBeacon = [[BeaconTracker sharedBeaconTracker] getClosestBeacon];
     
+    //COUPLE LOGIC
     NSLog(@"%f", purpleBeacon.accuracy);
     if(purpleBeacon.proximity == CLProximityImmediate) {
         [self couplingRecognizedWithBeacon:purpleBeacon];
@@ -70,14 +72,16 @@
 #pragma mark COUPLING
 - (void)couplingRecognizedWithBeacon:(CLBeacon *)beacon
 {
-    if(self.coupleLogic.isCoupled == NO) {
+    if(self.coupleLogic.isCoupled == NO && self.coupleLogic.isCouplePossible == YES) {
         
         if([self couplePhoneAndServerWithBeacon:beacon]) {
             self.coupleLogic.coupled = YES;
+            self.coupleLogic.couplePossible = NO;
             self.coupleLogic.beacon = beacon;
             
             
             self.coupleStatusLabel.text = [NSString stringWithFormat:@"Coupled with Beacon! \n Major: %@ Minor: %@", beacon.major, beacon.minor];
+            [self.statusImageView setImage:[UIImage imageNamed:@"iconmonstr-link-4-icon-256"]];
             [self.activityIndicator stopAnimating];
             [self.decoupleButton setHidden:NO];
         }
@@ -87,11 +91,20 @@
 - (IBAction)decouplePressed:(UIButton *)sender
 {
     if([self decouplePhoneAndServer]) {
+        
         self.coupleLogic.coupled = NO;
         self.coupleLogic.beacon = NULL;
         self.coupleStatusLabel.text = @"Looking for Beacons";
         [self.activityIndicator startAnimating];
-
+        [self.statusImageView setImage:[UIImage imageNamed:@"iconmonstr-link-5-icon-256"]];
+        
+        
+        double delayInSeconds = 2.0;
+        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
+        dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+            self.coupleLogic.couplePossible = YES;
+        });
+        
         
         [sender setHidden:YES];
     }
