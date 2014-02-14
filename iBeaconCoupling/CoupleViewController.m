@@ -53,13 +53,13 @@
 
 - (void)beaconTrackerUpdated
 {
-    CLBeacon *purpleBeacon = [[BeaconTracker sharedBeaconTracker] getBeaconWhereUUID:[[BeaconDefaults sharedDefaults] defaultProximityUUID] major:[NSNumber numberWithInt:BEACON_PURPLE_MAJOR] minor:[NSNumber numberWithInt:BEACON_PURPLE_MINOR]];
-//    CLBeacon *closestBeacon = [[BeaconTracker sharedBeaconTracker] getClosestBeacon];
+//    CLBeacon *beacon = [[BeaconTracker sharedBeaconTracker] getBeaconWhereUUID:[[BeaconDefaults sharedDefaults] defaultProximityUUID] major:[NSNumber numberWithInt:BEACON_PURPLE_MAJOR] minor:[NSNumber numberWithInt:BEACON_PURPLE_MINOR]];
+    CLBeacon *beacon = [[BeaconTracker sharedBeaconTracker] getClosestBeacon];
     
     //COUPLE LOGIC
-    NSLog(@"%f", purpleBeacon.accuracy);
-    if(purpleBeacon.proximity == CLProximityImmediate) {
-        [self couplingRecognizedWithBeacon:purpleBeacon];
+    NSLog(@"%f", beacon.accuracy);
+    if(beacon.proximity == CLProximityImmediate) {
+        [self couplingRecognizedWithBeacon:beacon];
     }
 }
 
@@ -114,7 +114,7 @@
 {
     NSURL *coupleUrl = [[NSURL alloc] initWithString:@"http://hieristmeinphpskriptzumcouplen"];
     
-    NSDictionary *responseJSON = [self makeRequestWithURL:coupleUrl];
+    NSDictionary *responseJSON = [self makeRequestWithURL:coupleUrl andBeacon:beacon];
 
     NSString *status = responseJSON[@"status"];
     
@@ -131,7 +131,7 @@
 {
     NSURL *decoupleUrl = [[NSURL alloc] initWithString:@"http://hieristmeinphpskriptzumDEcouplen"];
 
-    NSDictionary *responseJSON = [self makeRequestWithURL:decoupleUrl];
+    NSDictionary *responseJSON = [self makeRequestWithURL:decoupleUrl andBeacon:nil];
     
     NSString *status = responseJSON[@"status"];
     
@@ -144,34 +144,42 @@
     return FALSE;
 }
 
-
-//- (id)makeRequestWithURL:(NSURL *)url
-//{
-//    NSURLRequest *request = [[NSURLRequest alloc] initWithURL:url
-//                                                  cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:10];
-//    
-//    // Fetch the JSON response
-//    NSData *responseData;
-//    NSURLResponse *response;
-//    NSError *error;
-//    
-//    // Make synchronous request
-//    responseData = [NSURLConnection sendSynchronousRequest:request
-//                                         returningResponse:&response
-//                                                     error:&error];
-//    
-//    NSError *jsonParsingError = nil;
-//    id responseJSON = [NSJSONSerialization JSONObjectWithData:responseData
-//                                                                 options:0 error:&jsonParsingError];
-//    
-//    
-//    return responseJSON;
-//}
-
-- (id)makeRequestWithURL:(NSURL *)url
+- (id)makeRequestWithURL:(NSURL *)url andBeacon:(CLBeacon *)beacon
 {
-    return  @{ @"status" : @"success" };
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url
+                                                                cachePolicy:NSURLRequestReturnCacheDataElseLoad
+                                                            timeoutInterval:10];
+    
+    
+    if(beacon != nil) {
+        [request setHTTPMethod:@"POST"];
+        NSString *postString = [NSString stringWithFormat:@"phoneid=123456789&uuid=%@&major=%@&minor=%@",beacon.proximityUUID, beacon.major,beacon.minor];
+        [request setHTTPBody:[postString dataUsingEncoding:NSUTF8StringEncoding]];
+    }
+    
+    // Fetch the JSON response
+    NSData *responseData;
+    NSURLResponse *response;
+    NSError *error;
+    
+    
+    // Make synchronous request
+    responseData = [NSURLConnection sendSynchronousRequest:request
+                                         returningResponse:&response
+                                                     error:&error];
+    
+    NSError *jsonParsingError = nil;
+    id responseJSON = [NSJSONSerialization JSONObjectWithData:responseData
+                                                                 options:0 error:&jsonParsingError];
+    
+    
+    return responseJSON;
 }
+
+//- (id)makeRequestWithURL:(NSURL *)url andBeacon:(CLBeacon *)beacon
+//{
+//    return  @{ @"status" : @"success" };
+//}
 
 
 - (CoupleLogic *)coupleLogic
