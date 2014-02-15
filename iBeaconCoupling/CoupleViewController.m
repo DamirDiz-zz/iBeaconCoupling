@@ -28,6 +28,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -57,9 +58,11 @@
     CLBeacon *beacon = [[BeaconTracker sharedBeaconTracker] getClosestBeacon];
     
     //COUPLE LOGIC
-    NSLog(@"%f", beacon.accuracy);
-    if(beacon.proximity == CLProximityImmediate) {
-        [self couplingRecognizedWithBeacon:beacon];
+    
+    if(beacon) {
+        if(beacon.proximity == CLProximityImmediate) {
+            [self couplingRecognizedWithBeacon:beacon];
+        }        
     }
 }
 
@@ -91,7 +94,6 @@
 - (IBAction)decouplePressed:(UIButton *)sender
 {
     if([self decouplePhoneAndServer]) {
-        
         self.coupleLogic.coupled = NO;
         self.coupleLogic.beacon = NULL;
         self.coupleStatusLabel.text = @"Looking for Beacons";
@@ -112,7 +114,7 @@
 
 - (BOOL)couplePhoneAndServerWithBeacon:(CLBeacon *)beacon
 {
-    NSURL *coupleUrl = [[NSURL alloc] initWithString:@"http://hieristmeinphpskriptzumcouplen"];
+    NSURL *coupleUrl = [[NSURL alloc] initWithString:@"http://ibeaconcoupling.hostei.com/couplephone.php"];
     
     NSDictionary *responseJSON = [self makeRequestWithURL:coupleUrl andBeacon:beacon];
 
@@ -129,12 +131,13 @@
 
 - (BOOL)decouplePhoneAndServer
 {
-    NSURL *decoupleUrl = [[NSURL alloc] initWithString:@"http://hieristmeinphpskriptzumDEcouplen"];
+    NSURL *decoupleUrl = [[NSURL alloc] initWithString:@"http://ibeaconcoupling.hostei.com/decouplephone.php"];
 
     NSDictionary *responseJSON = [self makeRequestWithURL:decoupleUrl andBeacon:nil];
     
     NSString *status = responseJSON[@"status"];
     
+    NSLog(@"%@",status);
     if(status) {
         if([status isEqualToString:@"success"]) {
             return YES;
@@ -146,6 +149,7 @@
 
 - (id)makeRequestWithURL:(NSURL *)url andBeacon:(CLBeacon *)beacon
 {
+    NSLog(@"%@",url);
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url
                                                                 cachePolicy:NSURLRequestReturnCacheDataElseLoad
                                                             timeoutInterval:10];
@@ -153,8 +157,9 @@
     
     if(beacon != nil) {
         [request setHTTPMethod:@"POST"];
-        NSString *postString = [NSString stringWithFormat:@"phoneid=123456789&uuid=%@&major=%@&minor=%@",beacon.proximityUUID, beacon.major,beacon.minor];
+        NSString *postString = [NSString stringWithFormat:@"phoneid=123456789&uuid=%@&major=%@&minor=%@",[beacon.proximityUUID UUIDString], beacon.major,beacon.minor];
         [request setHTTPBody:[postString dataUsingEncoding:NSUTF8StringEncoding]];
+
     }
     
     // Fetch the JSON response
@@ -168,6 +173,7 @@
                                          returningResponse:&response
                                                      error:&error];
     
+    
     NSError *jsonParsingError = nil;
     id responseJSON = [NSJSONSerialization JSONObjectWithData:responseData
                                                                  options:0 error:&jsonParsingError];
@@ -175,12 +181,6 @@
     
     return responseJSON;
 }
-
-//- (id)makeRequestWithURL:(NSURL *)url andBeacon:(CLBeacon *)beacon
-//{
-//    return  @{ @"status" : @"success" };
-//}
-
 
 - (CoupleLogic *)coupleLogic
 {

@@ -241,7 +241,11 @@
 
 - (CLBeacon *)getClosestBeacon
 {
-    return [self.originalBeacons objectAtIndex:0];
+    if([self.originalBeacons count] > 0) {
+        return [self.originalBeacons firstObject];
+    } else {
+        return nil;
+    }
 }
 
 
