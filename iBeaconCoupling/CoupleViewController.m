@@ -6,9 +6,11 @@
 //  Copyright (c) 2014 Damir Dizdarevic. All rights reserved.
 //
 
+#import "AppDelegate.h"
 #import "CoupleViewController.h"
 #import "CoupleLogic.h"
 #import "BeaconDefaults.h"
+#import <AudioToolbox/AudioToolbox.h>
 
 @interface CoupleViewController ()
 
@@ -57,8 +59,6 @@
 //    CLBeacon *beacon = [[BeaconTracker sharedBeaconTracker] getBeaconWhereUUID:[[BeaconDefaults sharedDefaults] defaultProximityUUID] major:[NSNumber numberWithInt:BEACON_PURPLE_MAJOR] minor:[NSNumber numberWithInt:BEACON_PURPLE_MINOR]];
     CLBeacon *beacon = [[BeaconTracker sharedBeaconTracker] getClosestBeacon];
     
-    //COUPLE LOGIC
-    
     if(beacon) {
         if(beacon.proximity == CLProximityImmediate) {
             [self couplingRecognizedWithBeacon:beacon];
@@ -78,10 +78,12 @@
     if(self.coupleLogic.isCoupled == NO && self.coupleLogic.isCouplePossible == YES) {
         
         if([self couplePhoneAndServerWithBeacon:beacon]) {
+            
+            AudioServicesPlayAlertSound(kSystemSoundID_Vibrate);
+
             self.coupleLogic.coupled = YES;
             self.coupleLogic.couplePossible = NO;
             self.coupleLogic.beacon = beacon;
-            
             
             self.coupleStatusLabel.text = [NSString stringWithFormat:@"Coupled with Beacon! \n Major: %@ Minor: %@", beacon.major, beacon.minor];
             [self.statusImageView setImage:[UIImage imageNamed:@"iconmonstr-link-4-icon-256"]];
@@ -137,7 +139,6 @@
     
     NSString *status = responseJSON[@"status"];
     
-    NSLog(@"%@",status);
     if(status) {
         if([status isEqualToString:@"success"]) {
             return YES;
@@ -147,9 +148,14 @@
     return FALSE;
 }
 
+- (NSString *)getPhoneID
+{
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    return appDelegate.phoneID;
+}
+
 - (id)makeRequestWithURL:(NSURL *)url andBeacon:(CLBeacon *)beacon
 {
-    NSLog(@"%@",url);
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url
                                                                 cachePolicy:NSURLRequestReloadIgnoringCacheData
                                                             timeoutInterval:10];
@@ -157,7 +163,11 @@
     
     if(beacon != nil) {
         [request setHTTPMethod:@"POST"];
-        NSString *postString = [NSString stringWithFormat:@"phoneid=123456789&uuid=%@&major=%@&minor=%@",[beacon.proximityUUID UUIDString], beacon.major,beacon.minor];
+        NSString *postString = [NSString stringWithFormat:@"phoneid=%@&uuid=%@&major=%@&minor=%@",
+                                [self getPhoneID],
+                                [beacon.proximityUUID UUIDString],
+                                beacon.major,
+                                beacon.minor];
         [request setHTTPBody:[postString dataUsingEncoding:NSUTF8StringEncoding]];
 
     }

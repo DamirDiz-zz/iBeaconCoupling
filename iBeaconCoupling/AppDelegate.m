@@ -8,13 +8,61 @@
 
 #import "AppDelegate.h"
 
+@interface AppDelegate()
+
+@property (strong, readwrite) NSString *phoneID;
+
+@end
+
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+
+    NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+
+    NSString *filePath = [documentsPath stringByAppendingPathComponent:@"phoneid.txt"];
+
+    NSLog(@"%@", filePath);
+    
+    NSString *phoneID = nil;
+    
+    if([fileManager fileExistsAtPath:filePath]) {
+        NSLog(@"Loading PhoneID");
+
+        phoneID = [[NSString alloc] initWithContentsOfFile:filePath encoding:NSUTF8StringEncoding error:nil];
+        
+    } else {
+        NSLog(@"Creating PhoneID");
+
+        phoneID = [self genRandStringLength:20];
+    
+        [fileManager createFileAtPath:filePath contents:[phoneID dataUsingEncoding:NSUTF8StringEncoding] attributes:nil];
+    }
+    
+    if(phoneID) {
+        self.phoneID = phoneID;
+        NSLog(@"PhoneID is %@", phoneID);
+    }
+    
     // Override point for customization after application launch.
     return YES;
 }
+
+NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+- (NSString *) genRandStringLength: (int) len {
+    
+    NSMutableString *randomString = [NSMutableString stringWithCapacity: len];
+    
+    for (int i=0; i<len; i++) {
+        [randomString appendFormat: @"%C", [letters characterAtIndex: arc4random() % [letters length]]];
+    }
+    
+    return randomString;
+}
+
 							
 - (void)applicationWillResignActive:(UIApplication *)application
 {
