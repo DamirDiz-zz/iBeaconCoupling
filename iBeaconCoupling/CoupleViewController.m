@@ -81,6 +81,16 @@
             
             AudioServicesPlayAlertSound(kSystemSoundID_Vibrate);
 
+            [UIView animateWithDuration:0.3f animations:^{
+                self.view.layer.backgroundColor = [UIColor colorWithRed:214.0f/255.0f green:229.0f/255.0f blue:157.0f/255.0f alpha:1.0].CGColor;
+            } completion:^(BOOL finished) {
+                if (finished) {
+                    [UIView animateWithDuration:0.3f animations:^{
+                        self.view.layer.backgroundColor = [UIColor whiteColor].CGColor;
+                    }];
+                }
+            }];
+            
             self.coupleLogic.coupled = YES;
             self.coupleLogic.couplePossible = NO;
             self.coupleLogic.beacon = beacon;
@@ -156,6 +166,8 @@
 
 - (id)makeRequestWithURL:(NSURL *)url andBeacon:(CLBeacon *)beacon
 {
+    NSLog(@"Sending Request with URL: %@", url);
+    
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url
                                                                 cachePolicy:NSURLRequestReloadIgnoringCacheData
                                                             timeoutInterval:10];
