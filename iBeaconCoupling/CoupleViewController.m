@@ -151,7 +151,7 @@
 {
     NSLog(@"%@",url);
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url
-                                                                cachePolicy:NSURLRequestReturnCacheDataElseLoad
+                                                                cachePolicy:NSURLRequestReloadIgnoringCacheData
                                                             timeoutInterval:10];
     
     
